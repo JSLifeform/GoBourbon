@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	integerCol = "int"
-	numericCol = "numeric(6,2)"
-	stringCol  = "varchar(45)"
+	integerCol = "INT"
+	numericCol = "NUMERIC(6,2)"
+	stringCol  = "VARCHAR(45)"
 	filePath   = `C:\Users\Owner\go\bourbon_database\Bourbon_Website_Data.xlsx`
 	database   = `testdb`
 )
@@ -32,17 +32,60 @@ func main() {
 	}
 
 	// loops through rows in sheet
-	for _, row := range rows {
+	for i, row := range rows {
 
-		// prints insert part of SQL statement
-		fmt.Println("INSERT INTO", database, "VALUES (")
+		// skips first row of senseless data
+		if i == 0 {
+			continue
 
-		// loops through cells in row
-		for _, colCell := range row {
-			fmt.Print(`"`, colCell, `"`, ", ")
+			// uses second row to create database with names of columns
+		} else if i == 1 {
+
+			var inputs []string
+			for _, colCell := range row {
+				// string for user to input column type
+				var input string
+				// ask for and reads in data type
+				fmt.Println("What data type(int, str, num) do you want for column ", colCell, "?")
+				fmt.Scanln(&input)
+				if input == "str" {
+					addToInput := colCell + " " + stringCol + ", "
+					inputs = append(inputs, addToInput)
+				} else if input == "int" {
+					addToInput := colCell + " " + integerCol + ", "
+					inputs = append(inputs, addToInput)
+				} else if input == "num" {
+					addToInput := colCell + " " + numericCol + ", "
+					inputs = append(inputs, addToInput)
+				} else {
+
+					// quits out of program, would like to prompt user again for correct input
+					fmt.Println("Incorrect input given, quitting until I figure out how to restart the loop and get correct input")
+					return
+				}
+
+			}
+			tableCreate := "CREATE TABLE [IF NOT EXISTS] " + database + "(\n" + "id INT AUTO_INCREMENT PRIMARY KEY, "
+			for _, item := range inputs {
+				tableCreate += item
+			}
+			tableCreate += ");"
+			fmt.Print(tableCreate, "\n\n\n")
+		} else {
+
+			// string variable to add INSERT statement to
+			addTable := "INSERT INTO " + database + " VALUES ("
+
+			// loops through cells in row
+			for _, colCell := range row {
+				addTable += `"` + colCell + `", `
+			}
+
+			// adds trailing parentheses and semicolon to INSERT statement
+			addTable += ");\n"
+			// I think adds new line, delete?
+			fmt.Println(addTable)
 		}
-		// I think adds new line, delete?
-		fmt.Println(");\n")
 	}
 	// shows opened file
 	fmt.Println(filePath)
