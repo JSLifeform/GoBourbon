@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -10,7 +11,7 @@ const (
 	integerCol = "INT"
 	numericCol = "NUMERIC(6,2)"
 	stringCol  = "VARCHAR(45)"
-	filePath   = `C:\Users\Owner\go\bourbon_database\Bourbon_Website_Data.xlsx`
+	filePath   = `Bourbon_Website_Data.xlsx`
 	database   = `testdb`
 )
 
@@ -69,6 +70,10 @@ func main() {
 			for _, item := range inputs {
 				tableCreate += item
 			}
+			// trims trailing ", " from tableCreate string
+			tableCreate = strings.Trim(tableCreate, ", ")
+
+			// appends trailing ");" to SQL query
 			tableCreate += ");"
 			fmt.Print(tableCreate, "\n\n\n")
 		} else {
@@ -81,6 +86,8 @@ func main() {
 				addTable += `"` + colCell + `", `
 			}
 
+			// trims trailing ', ' from string before adding closing line to statement
+			addTable = strings.Trim(addTable, ", ")
 			// adds trailing parentheses and semicolon to INSERT statement
 			addTable += ");\n"
 			// I think adds new line, delete?
@@ -91,3 +98,37 @@ func main() {
 	fmt.Println(filePath)
 
 }
+
+/*
+package main
+
+import (
+	"fmt"
+)
+
+func getColType() string {
+	for {
+		var input string
+		// ask for and reads in data type
+		fmt.Println("What data type(int, str, num) do you want for column ", colCell, "?")
+		fmt.Scanln(&input)
+		switch input {
+		case "str":
+			return StrColType
+		case "int":
+			return IntColType
+		case "num":
+			return NumColType
+		default:
+			fmt.Println("Incorrect input given, quitting until I figure out how to restart the loop and get correct input")
+		}
+	}
+}
+
+func main() {
+	// string for user to input column type
+
+	addToInput := colCell + " " + colType + ", "
+	inputs = append(inputs, addToInput)
+}
+*/
