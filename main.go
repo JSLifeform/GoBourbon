@@ -7,7 +7,6 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/xuri/excelize/v2"
-	// "Bourbon_Database/pkg/createDB"
 )
 
 const (
@@ -17,6 +16,8 @@ const (
 	FilePath   = `Bourbon_Website_Data.xlsx`
 	Database   = `testdb`
 )
+
+var ColCell *string
 
 type queryResult struct {
 	ID            int     `json:"id"`
@@ -36,12 +37,33 @@ type queryResult struct {
 	Released      string  `json:"released"`
 }
 
+func dropTable(dbName string) string {
+	dropSyntax := "DROP TABLE IF EXISTS " + dbName + ";"
+	return dropSyntax
+}
+
+func columnType() string {
+	var input string
+	// ask for and reads in data type
+	columnName := *ColCell
+	fmt.Print("What data type(int, str, num) do you want for column ", columnName, "?")
+	fmt.Scanln(&input)
+	switch input {
+	case "str":
+		return StringCol
+	case "int":
+		return IntegerCol
+	case "num":
+		return NumericCol
+	default:
+		fmt.Println("Incorrect input!")
+		return ""
+	}
+}
+
 func main() {
-	fmt.Println("Go MySQL Tutorial")
 
 	// Open up our database connection.
-	// I've set up a database on my local machine using phpmyadmin.
-	// The database is called testDb
 	db, err := sql.Open("mysql", "root:password@tcp(127.0.0.1:3306)/bourbon")
 
 	// if there is an error opening the connection, handle it
@@ -51,22 +73,7 @@ func main() {
 	}
 
 	// defer the close till after the main function has finished
-	// executing
 	defer db.Close()
-
-	// // perform a db.Query insert
-	// insert, err := db.Query("INSERT INTO test VALUES ( 6, 'HI EEVGENIYA' )")
-
-	// // if there is an error inserting, handle it
-	// if err != nil {
-	// 	fmt.Println("Panic on insert statement")
-	// 	panic(err.Error())
-	// }
-
-	// // close insert statement
-	// defer insert.Close()
-
-	// test select statement
 
 	// open Excel file
 	f, err := excelize.OpenFile(FilePath)
@@ -74,8 +81,6 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
-	// rows, _ := openSpreadsheet(filePath)
 
 	// read in rows individually
 	rows, err := f.GetRows("Sheet1")
@@ -85,8 +90,7 @@ func main() {
 	}
 
 	//drops old table
-	dropTable := "DROP TABLE IF EXISTS " + Database + ";"
-	DropResults, err := db.Query(dropTable)
+	DropResults, err := db.Query(dropTable(Database))
 	if err != nil {
 		fmt.Println("Panic during table drop!")
 		panic(err.Error())
@@ -104,27 +108,38 @@ func main() {
 		} else if i == 1 {
 
 			var inputs []string
-			for _, colCell := range row {
+			for _, ColCell := range row {
 				// string for user to input column type
-				var input string
+				// var input string
 				// ask for and reads in data type
-				fmt.Println("What data type(int, str, num) do you want for column ", colCell, "?")
-				fmt.Scanln(&input)
-				if input == "str" {
-					addToInput := colCell + " " + StringCol + ", "
-					inputs = append(inputs, addToInput)
-				} else if input == "int" {
-					addToInput := colCell + " " + IntegerCol + ", "
-					inputs = append(inputs, addToInput)
-				} else if input == "num" {
-					addToInput := colCell + " " + NumericCol + ", "
-					inputs = append(inputs, addToInput)
-				} else {
-
-					// quits out of program, would like to prompt user again for correct input
-					fmt.Println("Incorrect input given, quitting until I figure out how to restart the loop and get correct input")
-					return
+				colType := ""
+				for {
+					colType = columnType()
+					if colType == "" {
+						continue
+					} else {
+						break
+					}
 				}
+
+				addToInput := ColCell + " " + colType + ", "
+				inputs = append(inputs, addToInput)
+
+				// if input == "str" {
+				// 	addToInput := colCell + " " + StringCol + ", "
+				// 	inputs = append(inputs, addToInput)
+				// } else if input == "int" {
+				// 	addToInput := colCell + " " + IntegerCol + ", "
+				// 	inputs = append(inputs, addToInput)
+				// } else if input == "num" {
+				// 	addToInput := colCell + " " + NumericCol + ", "
+				// 	inputs = append(inputs, addToInput)
+				// } else {
+
+				// 	// quits out of program, would like to prompt user again for correct input
+				// 	fmt.Println("Incorrect input given, quitting until I figure out how to restart the loop and get correct input")
+				// 	return
+				// }
 
 			}
 			tableCreate := "CREATE TABLE IF NOT EXISTS " + Database + "(\n" + "id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
@@ -189,7 +204,7 @@ func main() {
 	results, err := db.Query("SELECT * FROM " + Database)
 	if err != nil {
 		fmt.Println("Panic on select statement")
-		panic(err.Error()) // proper error handling instead of panic in your app
+		panic(err.Error())
 	}
 
 	//close query
@@ -203,19 +218,9 @@ func main() {
 			&PrintQuery.Sourced_From, &PrintQuery.Released)
 		if err != nil {
 			fmt.Println("Panic on Scan")
-			panic(err.Error()) // proper error handling instead of panic in your app
+			panic(err.Error())
 		}
 		fmt.Println(PrintQuery)
-
-		// // var tag Tag
-		// // for each row, scan the result into our tag composite object
-		// err := results.Scan(&printStr)
-		// if err != nil {
-		// 	fmt.Println("Panic on Scan")
-		// 	panic(err.Error()) // proper error handling instead of panic in your app
-		// }
-		// // and then print out the tag's Name attribute
-		// fmt.Println(printStr)
 	}
 
 }
