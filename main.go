@@ -45,8 +45,10 @@ func dropTable(dbName string) string {
 func columnType() string {
 	var input string
 	// ask for and reads in data type
-	columnName := *ColCell
-	fmt.Print("What data type(int, str, num) do you want for column ", columnName, "?")
+	columnName := &ColCell
+	// fmt.Println(&ColCell, " ", ColCell, " ", *ColCell)
+	fmt.Println(&columnName, " ", columnName, " ", *columnName)
+	fmt.Print("What data type(int, str, num) do you want for column ", *columnName, "?")
 	fmt.Scanln(&input)
 	switch input {
 	case "str":
