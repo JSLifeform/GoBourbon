@@ -17,8 +17,6 @@ const (
 	Database   = `testdb`
 )
 
-var ColCell *string
-
 type queryResult struct {
 	ID            int     `json:"id"`
 	Bourbon       string  `json:"bourbon"`
@@ -42,13 +40,12 @@ func dropTable(dbName string) string {
 	return dropSyntax
 }
 
-func columnType() string {
+// function to select proper column type for SQL table creation statement
+func columnType(columnName string) string {
 	var input string
 	// ask for and reads in data type
-	columnName := &ColCell
-	// fmt.Println(&ColCell, " ", ColCell, " ", *ColCell)
-	fmt.Println(&columnName, " ", columnName, " ", *columnName)
-	fmt.Print("What data type(int, str, num) do you want for column ", *columnName, "?")
+	fmt.Print("What data type(int, str, num) do you want for column ", columnName, "?")
+	// reads in user input from CLI
 	fmt.Scanln(&input)
 	switch input {
 	case "str":
@@ -92,12 +89,12 @@ func main() {
 	}
 
 	//drops old table
-	DropResults, err := db.Query(dropTable(Database))
+	dropResults, err := db.Query(dropTable(Database))
 	if err != nil {
 		fmt.Println("Panic during table drop!")
 		panic(err.Error())
 	}
-	fmt.Print("New table created! Results of db.Query: ", &DropResults, "\n\n\n")
+	defer dropResults.Close()
 
 	// loops through rows in sheet
 	for i, row := range rows {
@@ -111,12 +108,10 @@ func main() {
 
 			var inputs []string
 			for _, ColCell := range row {
-				// string for user to input column type
-				// var input string
-				// ask for and reads in data type
+				// loop to check for proper column type
 				colType := ""
 				for {
-					colType = columnType()
+					colType = columnType(ColCell)
 					if colType == "" {
 						continue
 					} else {
